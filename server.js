@@ -16,13 +16,26 @@ app.get('/health', function (req, res) {
 app.post('/deploy/:name', function (req, res) {
   var image = req.body.baseUrl + '/' + req.body.image + (req.body.tag ? req.body.tag : '');
   var pull = spawn('docker', ['pull', image]);
+  var error = '';
   var intervalId = setInterval(function () {
     res.write('. ');
   }, 100);
   pull.stdout.on('data', function (data) {
     console.log(data.toString().trim());
   });
+  pull.stderr.on('data', function (data) {
+    data = data.toString().trim();
+    var matches = data.match('msg="(.*?)"');
+    if (matches && matches[1]) {
+      error += matches[1] + '\n';
+    }
+  });
   pull.stdout.on('end', function () {
+    if (error) {
+      clearInterval(intervalId);
+      res.write(error.red);
+      return res.end();
+    }
     console.log('FINISHED PULLING');
     var stop = spawn('docker', ['rm', '-f', req.params.name]);
     stop.stdout.on('data', function (data) {
