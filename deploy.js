@@ -16,14 +16,21 @@ switch (argv._[0]) {
   case 'deploy':
     if (!argv._[1]) break;
     var port = '';
-    if (config.images && config.images[argv._[1]] && config.images[argv._[1]].port) {
-      port = config.images[argv._[1]].port;
+    var links = [];
+    if (config.images && config.images[argv._[1]]) {
+      if (config.images[argv._[1]].port) {
+        port = config.images[argv._[1]].port;
+      }
+      if (config.images[argv._[1]].links) {
+        links = config.images[argv._[1]].links;
+      }
     }
     request.post(config.server+'/deploy/'+argv._[1], {
       form: {
         baseUrl: config.registry,
         image: argv._[1],
-        port: port
+        port: port,
+        links: links
       }
     }).pipe(process.stdout);
     break;
@@ -53,6 +60,7 @@ switch (argv._[0]) {
       config.images = config.images || {};
       config.images[argv._[1]] = config.images[argv._[1]] || {};
       config.images[argv._[1]].port = argv.p || '';
+      config.images[argv._[1]].links = (argv.links && argv.links.split(',')) || [];
       fs.writeFileSync(path.resolve(process.env.HOME, '.deploycfg'), JSON.stringify(config));
     }
     break;

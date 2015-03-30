@@ -16,6 +16,7 @@ app.get('/health', function (req, res) {
 app.post('/deploy/:name', function (req, res) {
   var image = req.body.baseUrl + '/' + req.body.image + (req.body.tag ? req.body.tag : '');
   var portMapping = (req.body.port && req.body.port+':'+req.body.port) || '';
+  var links = req.body.links || [];
   var pull = spawn('docker', ['pull', image]);
   var error = '';
   var intervalId = setInterval(function () {
@@ -46,7 +47,17 @@ app.post('/deploy/:name', function (req, res) {
     stop.stdout.on('end', function () {
       console.log('FINISHED STOPPING');
       error = '';
-      var run = spawn('docker', ['run', '-d', '-p', portMapping, '--name', req.params.name, image]);
+      var run = spawn('docker', [].concat.apply([
+        'run',
+        '-d',
+        '-p', portMapping
+        ],
+        links.map(function (link) {
+          return ['--link', link+':'+link];
+        })
+        ).concat([
+        '--name', req.params.name, image
+      ]));
       run.stdout.on('data', function (data) {
         console.log(data.toString().trim());
       });
