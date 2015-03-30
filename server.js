@@ -1,4 +1,5 @@
 var bodyParser = require('body-parser'),
+    colors = require('colors'),
     spawn = require('child_process').spawn,
     exec = require('child_process').exec,
     express = require('express');
@@ -36,7 +37,10 @@ app.post('/deploy/:name', function (req, res) {
       run.stdout.on('end', function () {
         console.log(image, 'is now running');
         clearInterval(intervalId);
-        res.write('\n' + image + ' is now running\n');
+        image = req.body.baseUrl + '/' + req.body.image.bold +
+                ':' + (req.body.tag ? req.body.tag : 'latest');
+        var str = image + ' is now running\n';
+        res.write('\n' + str.green);
         res.end();
       });
     });
@@ -46,7 +50,8 @@ app.post('/deploy/:name', function (req, res) {
 app.post('/undeploy/:name', function (req, res) {
   var stop = spawn('docker', ['rm', '-f', req.params.name]);
   stop.stdout.on('end', function () {
-    res.send('Undeployed ' + req.params.name + '\n');
+    var str = 'Undeployed ' + req.params.name + '\n';
+    res.send(str.bold.grey);
     res.end();
   });
 });
@@ -60,8 +65,8 @@ app.get('/list', function (req, res) {
     var index = lines[0].indexOf('CREATED');
     lines = lines.splice(1);
     res.send(lines.map(function (i) {
-      var created = i.substr(index, i.indexOf('ago')+3-index);
-      var name = i.trim().match('.* (.*?)$')[1];
+      var created = i.substr(index, i.indexOf('ago')+3-index).grey;
+      var name = i.trim().match('.* (.*?)$')[1].bold.blue;
       return name + ' ('+created+')';
     }).join('\n')+'\n');
   });
