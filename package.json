@@ -1,0 +1,12 @@
+{
+  "name": "docker-deploy",
+  "version": "1.0.0",
+  "description": "A simple service that helps with deploying docker images to a server",
+  "author": "Joshua Morton",
+  "dependencies": {
+    "body-parser": "^1.12.2",
+    "express": "^4.12.3",
+    "minimist": "^1.1.1",
+    "request": "^2.54.0"
+  }
+}
